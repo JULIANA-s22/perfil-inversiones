@@ -20,7 +20,7 @@ public class ServicioGestionPdf implements CasoUsoGestionPdf {
     public DocumentoPdf solicitar(SolicitudGeneracionPdf solicitud) {
         // TODO: validar umbral del 1% entre valorFinalFront y cálculo propio
         // TODO: publicar a la cola
-        DocumentoPdf documento = DocumentoPdf.crear(solicitud.usuarioId(), solicitud.valorFinalFront() + "");
+        DocumentoPdf documento = DocumentoPdf.crear(solicitud.usuarioId(), UUID.randomUUID().toString());
         return repositorioDocumentoPdf.guardar(documento);
     }
 
