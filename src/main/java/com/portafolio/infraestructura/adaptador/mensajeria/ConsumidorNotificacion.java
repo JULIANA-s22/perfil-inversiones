@@ -18,13 +18,16 @@ public class ConsumidorNotificacion {
 
     private final RestClient restClient;
 
-    @Value("${resend.from:Proyeccion <onboarding@resend.dev>}")
+    @Value("${brevo.from-email}")
     private String fromEmail;
 
-    public ConsumidorNotificacion(@Value("${resend.api-key}") String apiKey) {
+    @Value("${brevo.from-name:Proyeccion}")
+    private String fromName;
+
+    public ConsumidorNotificacion(@Value("${brevo.api-key}") String apiKey) {
         this.restClient = RestClient.builder()
-                .baseUrl("https://api.resend.com")
-                .defaultHeader("Authorization", "Bearer " + apiKey)
+                .baseUrl("https://api.brevo.com/v3")
+                .defaultHeader("api-key", apiKey)
                 .build();
     }
 
@@ -48,22 +51,22 @@ public class ConsumidorNotificacion {
                     fmt.format(mensaje.getValorModerado()), fmt.format(mensaje.getValorAgresivo()));
 
             Map<String, Object> body = Map.of(
-                    "from", fromEmail,
-                    "to", new String[]{mensaje.getCorreoDestino()},
+                    "sender", Map.of("name", fromName, "email", fromEmail),
+                    "to", new Object[]{Map.of("email", mensaje.getCorreoDestino())},
                     "subject", "Proyección - Resultado de tu Simulación",
-                    "text", cuerpo
+                    "textContent", cuerpo
             );
 
             restClient.post()
-                    .uri("/emails")
+                    .uri("/smtp/email")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(body)
                     .retrieve()
                     .toBodilessEntity();
 
-            log.info("Correo enviado via Resend a: {}", mensaje.getCorreoDestino());
+            log.info("Correo enviado via Brevo a: {}", mensaje.getCorreoDestino());
         } catch (Exception e) {
-            log.error("Error enviando correo via Resend: {}", e.getMessage());
+            log.error("Error enviando correo via Brevo: {}", e.getMessage());
         }
     }
 }

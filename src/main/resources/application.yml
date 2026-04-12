@@ -27,8 +27,10 @@ spring:
     ssl:
       enabled: true
 
-  resend:
-    api-key: ${RESEND_API_KEY}
+  brevo:
+    api-key: ${BREVO_API_KEY}
+    from-email: ${BREVO_FROM_EMAIL}
+    from-name: Proyeccion
 
 gemini:
   api-key: ${GEMINI_API_KEY}
