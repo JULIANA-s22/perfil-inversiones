@@ -6,8 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.JdbcType;
-import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -31,8 +29,7 @@ public class EntidadConversacionChatbotJpa {
     private LocalDateTime iniciadaEn;
 
     @Enumerated(EnumType.STRING)
-    @JdbcType(PostgreSQLEnumJdbcType.class)
-    @Column(name = "estado", nullable = false, columnDefinition = "estado_conversacion")
+    @Column(name = "estado", nullable = false)
     private ConversacionChatbot.EstadoConversacion estado;
 
     public static EntidadConversacionChatbotJpa desdeDominio(ConversacionChatbot conversacion) {

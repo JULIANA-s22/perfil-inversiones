@@ -6,8 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.JdbcType;
-import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 import java.time.LocalDateTime;
 
@@ -27,11 +25,10 @@ public class EntidadMensajeChatbotJpa {
     private Integer conversacionId;
 
     @Enumerated(EnumType.STRING)
-    @JdbcType(PostgreSQLEnumJdbcType.class)
-    @Column(name = "rol", nullable = false, columnDefinition = "rol_mensaje")
+    @Column(name = "rol", nullable = false)
     private MensajeChatbot.RolMensaje rol;
 
-    @Column(name = "contenido", nullable = false, columnDefinition = "text")
+    @Column(name = "contenido", nullable = false, columnDefinition = "TEXT")
     private String contenido;
 
     @Column(name = "enviado_en", nullable = false)
