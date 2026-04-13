@@ -18,7 +18,7 @@ public class ConsumidorNotificacion {
 
     private final RestClient restClient;
 
-    @Value("${resend.from")
+    @Value("${resend.from:Proyeccion <onboarding@resend.dev>}")
     private String fromEmail;
 
     public ConsumidorNotificacion(@Value("${resend.api-key}") String apiKey) {
