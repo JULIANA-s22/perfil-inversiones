@@ -1,35 +1,19 @@
 package com.portafolio.infraestructura.adaptador.mensajeria;
 
 import com.portafolio.infraestructura.configuracion.mensajeria.ConfiguracionRabbit;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClient;
 
 import java.text.NumberFormat;
 import java.util.Locale;
-import java.util.Map;
 
-@Slf4j
-@Component
+@Slf4j @Component @RequiredArgsConstructor
 public class ConsumidorNotificacion {
-
-    private final RestClient restClient;
-
-    @Value("${brevo.from-email}")
-    private String fromEmail;
-
-    @Value("${brevo.from-name:Proyeccion}")
-    private String fromName;
-
-    public ConsumidorNotificacion(@Value("${brevo.api-key}") String apiKey) {
-        this.restClient = RestClient.builder()
-                .baseUrl("https://api.brevo.com/v3")
-                .defaultHeader("api-key", apiKey)
-                .build();
-    }
+    private final JavaMailSender mailSender;
 
     @RabbitListener(queues = ConfiguracionRabbit.COLA_NOTIFICACIONES)
     public void procesarMensaje(MensajeSimulacion mensaje) {
@@ -37,36 +21,34 @@ public class ConsumidorNotificacion {
         try {
             NumberFormat fmt = NumberFormat.getInstance(new Locale("es", "CO"));
             String cuerpo = String.format("""
+                    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                    PROYECCIÓN - Resumen de Simulación
+                    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                    
                     Capital Actual: $%s COP
                     Aporte Mensual: $%s COP
                     Tiempo: %d años
-
+                    
                     RESULTADOS POR PERFIL:
                     Conservador (3%% TEA): $%s COP
                     Moderado (7%% TEA):    $%s COP
                     Agresivo (11%% TEA):   $%s COP
+                    
+                    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                    Proyección - Tu Futuro, Bajo Tu Control
                     """,
                     fmt.format(mensaje.getCapitalActual()), fmt.format(mensaje.getAporteMensual()),
                     mensaje.getTiempoAnios(), fmt.format(mensaje.getValorConservador()),
                     fmt.format(mensaje.getValorModerado()), fmt.format(mensaje.getValorAgresivo()));
 
-            Map<String, Object> body = Map.of(
-                    "sender", Map.of("name", fromName, "email", fromEmail),
-                    "to", new Object[]{Map.of("email", mensaje.getCorreoDestino())},
-                    "subject", "Proyección - Resultado de tu Simulación",
-                    "textContent", cuerpo
-            );
-
-            restClient.post()
-                    .uri("/smtp/email")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(body)
-                    .retrieve()
-                    .toBodilessEntity();
-
-            log.info("Correo enviado via Brevo a: {}", mensaje.getCorreoDestino());
+            SimpleMailMessage correo = new SimpleMailMessage();
+            correo.setTo(mensaje.getCorreoDestino());
+            correo.setSubject("Proyección - Resultado de tu Simulación");
+            correo.setText(cuerpo);
+            mailSender.send(correo);
+            log.info("Correo enviado a: {}", mensaje.getCorreoDestino());
         } catch (Exception e) {
-            log.error("Error enviando correo via Brevo: {}", e.getMessage());
+            log.error("Error enviando correo: {}", e.getMessage());
         }
     }
 }
