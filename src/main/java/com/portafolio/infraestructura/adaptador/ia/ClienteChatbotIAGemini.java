@@ -181,6 +181,11 @@ public class ClienteChatbotIAGemini implements ClienteChatbotIA {
             List<Map<?, ?>> candidates = (List<Map<?, ?>>) respuesta.get("candidates");
             Map<?, ?> content = (Map<?, ?>) candidates.get(0).get("content");
             List<Map<?, ?>> parts = (List<Map<?, ?>>) content.get("parts");
+            for (Map<?, ?> part : parts) {
+                if (!Boolean.TRUE.equals(part.get("thought"))) {
+                    return (String) part.get("text");
+                }
+            }
             return (String) parts.get(0).get("text");
         } catch (Exception e) {
             throw new RuntimeException("Error al procesar la respuesta de Gemini: " + e.getMessage(), e);
