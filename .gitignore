@@ -4,4 +4,5 @@ build/
 *.iml
 .vscode/
 .DS_Store
-*.logsrc/main/resources/application.yml
+*.log
+src/main/resources/application.yml

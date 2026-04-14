@@ -1,0 +1,291 @@
+{
+  "info": {
+    "name": "Perfil Inversiones API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "tokenAcceso", "value": "" },
+    { "key": "tokenRefresco", "value": "" },
+    { "key": "usuarioId", "value": "" },
+    { "key": "conversacionId", "value": "1" },
+    { "key": "pdfId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Autenticacion",
+      "item": [
+        {
+          "name": "Registro",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/autenticacion/registro",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"test@example.com\",\n  \"contrasena\": \"password123\",\n  \"nombreCompleto\": \"Juan Perez\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) pm.collectionVariables.set('usuarioId', json.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inicio Sesion",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/autenticacion/inicio-sesion",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"test@example.com\",\n  \"contrasena\": \"password123\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.tokenAcceso) pm.collectionVariables.set('tokenAcceso', json.tokenAcceso);",
+                  "if (json.tokenRefresco) pm.collectionVariables.set('tokenRefresco', json.tokenRefresco);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refrescar Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/autenticacion/refrescar",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tokenRefresco\": \"{{tokenRefresco}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.tokenAcceso) pm.collectionVariables.set('tokenAcceso', json.tokenAcceso);",
+                  "if (json.tokenRefresco) pm.collectionVariables.set('tokenRefresco', json.tokenRefresco);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Perfil (publico)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/autenticacion/perfil"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Usuarios",
+      "item": [
+        {
+          "name": "Mi Perfil",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenAcceso}}" }],
+            "url": "{{baseUrl}}/api/usuarios/perfil"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chatbot",
+      "item": [
+        {
+          "name": "Iniciar Cuestionario",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAcceso}}" }
+            ],
+            "url": "{{baseUrl}}/api/chatbot/conversaciones/cuestionario",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) pm.collectionVariables.set('conversacionId', json.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Iniciar Chat",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAcceso}}" }
+            ],
+            "url": "{{baseUrl}}/api/chatbot/conversaciones/chat",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) pm.collectionVariables.set('conversacionId', json.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar Conversaciones del Usuario",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenAcceso}}" }],
+            "url": "{{baseUrl}}/api/chatbot/conversaciones/usuario/{{usuarioId}}"
+          }
+        },
+        {
+          "name": "Responder Cuestionario",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAcceso}}" }
+            ],
+            "url": "{{baseUrl}}/api/chatbot/conversaciones/{{conversacionId}}/responder",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenido\": \"CONSERVADOR\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Enviar Mensaje Chat",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAcceso}}" }
+            ],
+            "url": "{{baseUrl}}/api/chatbot/conversaciones/{{conversacionId}}/mensajes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenido\": \"¿Cuál es la mejor estrategia de inversión para mi perfil?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Obtener Mensajes de Conversacion",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenAcceso}}" }],
+            "url": "{{baseUrl}}/api/chatbot/conversaciones/{{conversacionId}}/mensajes"
+          }
+        },
+        {
+          "name": "Cerrar Conversacion",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenAcceso}}" }],
+            "url": "{{baseUrl}}/api/chatbot/conversaciones/{{conversacionId}}/cerrar"
+          }
+        }
+      ]
+    },
+    {
+      "name": "PDF",
+      "item": [
+        {
+          "name": "Solicitar Generacion de PDF",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{tokenAcceso}}" }
+            ],
+            "url": "{{baseUrl}}/api/pdf/solicitar",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": \"{{usuarioId}}\",\n  \"capitalActual\": 10000.00,\n  \"aporteMensual\": 500.00,\n  \"cantidadAnios\": 20,\n  \"perfil\": \"MODERADO\",\n  \"graficaBase64\": \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==\",\n  \"valorFinalFront\": 250000.00\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) pm.collectionVariables.set('pdfId', json.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar PDFs del Usuario",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenAcceso}}" }],
+            "url": "{{baseUrl}}/api/pdf/usuario/{{usuarioId}}"
+          }
+        },
+        {
+          "name": "Iniciar Procesamiento PDF",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenAcceso}}" }],
+            "url": "{{baseUrl}}/api/pdf/{{pdfId}}/iniciar-procesamiento"
+          }
+        },
+        {
+          "name": "Completar PDF",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenAcceso}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/pdf/{{pdfId}}/completar?urlBucket=https://storage.example.com/pdf-123.pdf",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pdf", "{{pdfId}}", "completar"],
+              "query": [{ "key": "urlBucket", "value": "https://storage.example.com/pdf-123.pdf" }]
+            }
+          }
+        },
+        {
+          "name": "Marcar PDF como Error",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenAcceso}}" }],
+            "url": "{{baseUrl}}/api/pdf/{{pdfId}}/error"
+          }
+        }
+      ]
+    }
+  ]
+}
