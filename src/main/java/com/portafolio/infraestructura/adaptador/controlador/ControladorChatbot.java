@@ -88,4 +88,9 @@ public class ControladorChatbot {
     public ResponseEntity<Map<String, String>> manejarErrorEstado(IllegalStateException ex) {
         return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
     }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, String>> manejarErrorIA(RuntimeException ex) {
+        return ResponseEntity.internalServerError().body(Map.of("error", "El mensaje no se ha podido procesar"));
+    }
 }
