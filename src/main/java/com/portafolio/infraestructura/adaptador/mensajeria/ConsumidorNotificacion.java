@@ -21,7 +21,7 @@ public class ConsumidorNotificacion {
     @Value("${resend.from:Proyeccion <onboarding@resend.dev>}")
     private String fromEmail;
 
-    public ConsumidorNotificacion(@Value("${resend.api-key}") String apiKey) {
+    public ConsumidorNotificacion(@Value("${spring.resend.api-key}") String apiKey) {
         this.restClient = RestClient.builder()
                 .baseUrl("https://api.resend.com")
                 .defaultHeader("Authorization", "Bearer " + apiKey)
