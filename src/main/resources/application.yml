@@ -47,6 +47,10 @@ gemini:
   api-key: ${GEMINI_API_KEY}
   modelo: ${GEMINI_MODELO:gemini-3-flash-preview}
 
+
+claude:
+  api-key: {API_KEY_CLAUDE}
+
 jwt:
   secreto: ${JWT_SECRET}
   expiracion-acceso-ms: 900000
