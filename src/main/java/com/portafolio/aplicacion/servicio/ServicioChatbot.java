@@ -10,6 +10,7 @@ import com.portafolio.dominio.puerto.salida.RepositorioMensajeChatbot;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,20 +41,21 @@ public class ServicioChatbot implements CasoUsoChatbot {
     public MensajeChatbot responderCuestionario(Integer conversacionId, String respuesta) {
         validarConversacionActiva(conversacionId);
 
-        repositorioMensaje.guardar(MensajeChatbot.crear(conversacionId, MensajeChatbot.RolMensaje.USUARIO, respuesta));
+        List<MensajeChatbot> historialPrevio = repositorioMensaje.buscarPorConversacionId(conversacionId);
 
-        List<MensajeChatbot> historial = repositorioMensaje.buscarPorConversacionId(conversacionId);
+        List<MensajeChatbot> historialConRespuesta = new ArrayList<>(historialPrevio);
+        historialConRespuesta.add(MensajeChatbot.crear(conversacionId, MensajeChatbot.RolMensaje.USUARIO, respuesta));
 
-        long preguntasRespondidas = historial.stream()
+        long preguntasRespondidas = historialConRespuesta.stream()
                 .filter(m -> m.getRol() == MensajeChatbot.RolMensaje.USUARIO)
                 .count();
 
-        List<String> pendientes = CuestionarioPerfil.PREGUNTAS.subList(
-                (int) preguntasRespondidas,
-                CuestionarioPerfil.PREGUNTAS.size()
-        );
+        int inicio = (int) Math.min(preguntasRespondidas, CuestionarioPerfil.PREGUNTAS.size());
+        List<String> pendientes = CuestionarioPerfil.PREGUNTAS.subList(inicio, CuestionarioPerfil.PREGUNTAS.size());
 
-        String respuestaIA = clienteIA.procesarCuestionario(historial, pendientes);
+        String respuestaIA = clienteIA.procesarCuestionario(historialConRespuesta, pendientes);
+
+        repositorioMensaje.guardar(MensajeChatbot.crear(conversacionId, MensajeChatbot.RolMensaje.USUARIO, respuesta));
         return repositorioMensaje.guardar(MensajeChatbot.crear(conversacionId, MensajeChatbot.RolMensaje.ASISTENTE, respuestaIA));
     }
 
@@ -61,11 +63,14 @@ public class ServicioChatbot implements CasoUsoChatbot {
     public MensajeChatbot enviarMensajeChat(Integer conversacionId, String contenido) {
         validarConversacionActiva(conversacionId);
 
+        List<MensajeChatbot> historialPrevio = repositorioMensaje.buscarPorConversacionId(conversacionId);
+
+        List<MensajeChatbot> historialConMensaje = new ArrayList<>(historialPrevio);
+        historialConMensaje.add(MensajeChatbot.crear(conversacionId, MensajeChatbot.RolMensaje.USUARIO, contenido));
+
+        String respuestaIA = clienteIA.responderConsulta(historialConMensaje);
+
         repositorioMensaje.guardar(MensajeChatbot.crear(conversacionId, MensajeChatbot.RolMensaje.USUARIO, contenido));
-
-        List<MensajeChatbot> historial = repositorioMensaje.buscarPorConversacionId(conversacionId);
-        String respuestaIA = clienteIA.responderConsulta(historial);
-
         return repositorioMensaje.guardar(MensajeChatbot.crear(conversacionId, MensajeChatbot.RolMensaje.ASISTENTE, respuestaIA));
     }
 
