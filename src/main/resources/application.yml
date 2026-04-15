@@ -49,7 +49,7 @@ gemini:
 
 
 claude:
-  api-key: {API_KEY_CLAUDE}
+  api-key: ${API_KEY_CLAUDE}
 
 jwt:
   secreto: ${JWT_SECRET}
