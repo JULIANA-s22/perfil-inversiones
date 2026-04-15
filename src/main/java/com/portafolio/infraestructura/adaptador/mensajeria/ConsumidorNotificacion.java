@@ -1,19 +1,29 @@
 package com.portafolio.infraestructura.adaptador.mensajeria;
 
 import com.portafolio.infraestructura.configuracion.mensajeria.ConfiguracionRabbit;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
 
 import java.text.NumberFormat;
 import java.util.Locale;
+import java.util.Map;
 
-@Slf4j @Component @RequiredArgsConstructor
+@Slf4j
+@Component
 public class ConsumidorNotificacion {
-    private final JavaMailSender mailSender;
+
+    private final RestClient restClient;
+
+    public ConsumidorNotificacion(@Value("${spring.resend.api-key}") String apiKey) {
+        this.restClient = RestClient.builder()
+                .baseUrl("https://api.resend.com")
+                .defaultHeader("Authorization", "Bearer " + apiKey)
+                .build();
+    }
 
     @RabbitListener(queues = ConfiguracionRabbit.COLA_NOTIFICACIONES)
     public void procesarMensaje(MensajeSimulacion mensaje) {
@@ -41,14 +51,23 @@ public class ConsumidorNotificacion {
                     mensaje.getTiempoAnios(), fmt.format(mensaje.getValorConservador()),
                     fmt.format(mensaje.getValorModerado()), fmt.format(mensaje.getValorAgresivo()));
 
-            SimpleMailMessage correo = new SimpleMailMessage();
-            correo.setTo(mensaje.getCorreoDestino());
-            correo.setSubject("Proyección - Resultado de tu Simulación");
-            correo.setText(cuerpo);
-            mailSender.send(correo);
-            log.info("Correo enviado a: {}", mensaje.getCorreoDestino());
+            Map<String, Object> body = Map.of(
+                    "from", "Proyeccion <onboarding@resend.dev>",
+                    "to", new String[]{mensaje.getCorreoDestino()},
+                    "subject", "Proyección - Resultado de tu Simulación",
+                    "text", cuerpo
+            );
+
+            String response = restClient.post()
+                    .uri("/emails")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .body(String.class);
+
+            log.info("Correo enviado via Resend a: {} - Respuesta: {}", mensaje.getCorreoDestino(), response);
         } catch (Exception e) {
-            log.error("Error enviando correo: {}", e.getMessage());
+            log.error("Error enviando correo via Resend: {}", e.getMessage(), e);
         }
     }
 }
